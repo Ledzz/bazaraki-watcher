@@ -40,6 +40,11 @@ const getOffers = async (searchParams) => {
 	});
 };
 
+/**
+ *
+ * @param url: string
+ * @returns {Promise<Awaited<Array<{date: string|undefined, image: string, price: string, name: string, url: string}>>>}
+ */
 const getData = async (url) => {
 	const res = await got.get(url).text();
 	const root = parse(res);
@@ -128,15 +133,16 @@ const checkSubscription = async (subscription) => {
 		});
 
 		if (newLinks.length) {
-			bot.telegram.sendMessage(chatId, `${newLinks.length} new ads. ${JSON.stringify(newLinks)}`);
-		} else {
-			bot.telegram.sendMessage(chatId, 'No new ads');
+			newLinks.forEach(link => {
+				bot.telegram.sendPhoto(chatId, link.image, {caption: `[${link.name}](https://www.bazaraki.com${link.url}), ${link.price.replace('.', '\\.')}€`, parse_mode: "MarkdownV2"})
+			});
 		}
+
+
 	} catch (e) {
 		console.error(e);
 	}
 };
-
 const checkAll = () => {
 	const stmt = db.prepare('SELECT chat_id as chatId, url FROM subscriptions');
 	for (const sub of stmt.all()) {
