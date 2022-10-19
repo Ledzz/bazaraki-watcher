@@ -6,6 +6,8 @@ import Database from 'better-sqlite3';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { uniqBy } from 'lodash-es';
+import express from 'express';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -134,7 +136,7 @@ const checkSubscription = async (subscription) => {
 
 		if (newLinks.length) {
 			newLinks.forEach(link => {
-				bot.telegram.sendPhoto(chatId, link.image, {caption: `[${link.name}](https://www.bazaraki.com${link.url}), ${link.price.replace('.', '\\.')}€`, parse_mode: "MarkdownV2"})
+				bot.telegram.sendPhoto(chatId, link.image, {caption: `[${link.name.replace('-', '\\-')}](https://www.bazaraki.com${link.url}), ${link.price.replace('.', '\\.')}€`, parse_mode: "MarkdownV2"})
 			});
 		}
 
@@ -152,4 +154,16 @@ const checkAll = () => {
 
 setInterval(checkAll, process.env.POLL_INTERVAL);
 checkAll();
-process.on('exit', () => db.close());
+
+// healthcheck
+
+const app = express();
+
+app.get('/healthcheck', (req, res) => {
+	res.end(`Hello`);
+});
+app.listen('8080');
+
+process.on('exit', () => {
+	db.close();
+});
