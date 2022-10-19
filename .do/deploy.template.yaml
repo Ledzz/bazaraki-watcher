@@ -1,0 +1,8 @@
+spec:
+  name: bazaraki-watcher
+  services:
+  - environment_slug: node-js
+    git:
+        branch: main
+        repo_clone_url: https://github.com/Ledzz/bazaraki-watcher.git
+    name: bazaraki-watcher
