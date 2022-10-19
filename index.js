@@ -53,7 +53,7 @@ const getData = async (url) => {
 	const rubric = root.querySelector('input[name=rubric]').getAttribute('value');
 	const c = root.querySelector('input[name=c]').getAttribute('value');
 	const pagination = root.querySelectorAll('[data-page].page-number');
-	const pageCount = pagination[pagination.length - 1].getAttribute('data-page');
+	const pageCount = pagination[pagination.length - 1]?.getAttribute('data-page')??1;
 	const ordering = '';
 	const q = '';
 	const myURL = new URL(url);
