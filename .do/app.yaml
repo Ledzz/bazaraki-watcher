@@ -1,8 +1,0 @@
-name: bazaraki-watcher
-services:
-- environment_slug: node-js
-  github:
-      branch: master
-      deploy_on_push: true
-      repo: Ledzz/bazaraki-watcher
-  name: bazaraki-watcher

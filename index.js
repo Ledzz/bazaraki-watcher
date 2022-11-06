@@ -8,7 +8,6 @@ import { dirname, join } from 'path';
 import { uniqBy } from 'lodash-es';
 import express from 'express';
 
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -18,7 +17,7 @@ const db = new Database(join(__dirname, process.env.DB_FILENAME), {verbose: cons
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.launch();
-bot.start((ctx) => ctx.reply('Welcome'));
+bot.start((ctx) => ctx.reply('Just send me a link from bazaraki.com with all you filters applied. I will monitor this query and send you updates.'));
 
 const getOffers = async (searchParams) => {
 	const res = await got.get('https://www.bazaraki.com/ajax-items-list/', {
@@ -53,7 +52,7 @@ const getData = async (url) => {
 	const rubric = root.querySelector('input[name=rubric]').getAttribute('value');
 	const c = root.querySelector('input[name=c]').getAttribute('value');
 	const pagination = root.querySelectorAll('[data-page].page-number');
-	const pageCount = pagination[pagination.length - 1]?.getAttribute('data-page')??1;
+	const pageCount = pagination[pagination.length - 1]?.getAttribute('data-page') ?? 1;
 	const ordering = '';
 	const q = '';
 	const myURL = new URL(url);
@@ -77,6 +76,10 @@ db.exec(`CREATE TABLE IF NOT EXISTS subscriptions (
     unique (chat_id, url) 
 );`);
 
+bot.help(ctx => {
+	ctx.reply('Just send me a link from bazaraki.com with all you filters applied. I will monitor this query and send you updates. For feature request, PM to @ledzz1994 and may be he\'ll do it;)');
+});
+
 bot.command('list', ctx => {
 	const chatId = ctx.chat.id;
 	const stmt = db.prepare('SELECT id, chat_id as chatId, url FROM subscriptions WHERE chat_id = @chatId');
@@ -94,6 +97,10 @@ bot.command('list', ctx => {
 
 });
 
+bot.command('ping', ctx => {
+	ctx.reply('pong');
+});
+
 bot.action(/remove_subscription_(\d+)/, async (ctx) => {
 	db.prepare('DELETE from subscriptions WHERE id = @id').run({id: ctx.match[1]});
 
@@ -101,7 +108,7 @@ bot.action(/remove_subscription_(\d+)/, async (ctx) => {
 	await ctx.answerCbQuery();
 });
 
-bot.hears(new RegExp(/https:\/\/(www\.)?bazaraki\.com\/(.*)/i), async (ctx) => {
+bot.hears(new RegExp(/https:\/\/(www|m\.)?bazaraki\.com\/(.*)/i), async (ctx) => {
 	const [url] = ctx.match;
 	const chatId = ctx.chat.id;
 	ctx.reply('Parsing...');
@@ -136,10 +143,12 @@ const checkSubscription = async (subscription) => {
 
 		if (newLinks.length) {
 			newLinks.forEach(link => {
-				bot.telegram.sendPhoto(chatId, link.image, {caption: `[${link.name.replace('-', '\\-')}](https://www.bazaraki.com${link.url}), ${link.price.replace('.', '\\.')}€`, parse_mode: "MarkdownV2"})
+				bot.telegram.sendPhoto(chatId, link.image, {
+					caption: `[${link.name.replace('-', '\\-')}](https://www.bazaraki.com${link.url}), ${link.price.replace('.', '\\.')}€`,
+					parse_mode: 'MarkdownV2',
+				});
 			});
 		}
-
 
 	} catch (e) {
 		console.error(e);
